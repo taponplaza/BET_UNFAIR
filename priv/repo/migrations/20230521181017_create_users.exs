@@ -3,14 +3,13 @@ defmodule BetUnfair.Repo.Migrations.CreateUsers do
 
   def change do
     create table(:users) do
+      add :user_id, :string
       add :name, :string
-      add :email, :string
-      add :password_hash, :string
+      add :balance, :integer, default: 0
 
       timestamps()
     end
 
-    create unique_index(:users, [:email])
+    create unique_index(:users, [:user_id])
   end
-
 end
