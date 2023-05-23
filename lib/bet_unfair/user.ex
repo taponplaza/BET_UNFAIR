@@ -54,25 +54,25 @@ defmodule BetUnfair.User do
 
 
   def user_withdraw(user_id, amount) when is_integer(amount) and amount > 0 do
-    Repo.transaction(fn ->
-      case Repo.get_by(__MODULE__, user_id: user_id) do
-        nil ->
-          {:error, "User does not exist."}
+    case Repo.get_by(__MODULE__, user_id: user_id) do
+      nil ->
+        {:error, "User does not exist."}
 
-        user ->
-          if user.balance >= amount do
+      user ->
+        if user.balance < amount do
+          {:error, "Insufficient balance."}
+        else
+          Repo.transaction(fn ->
             user
             |> Ecto.Changeset.change()
             |> Ecto.Changeset.put_change(:balance, user.balance - amount)
             |> Repo.update()
-
-            amount
-          else
-            {:error, "Insufficient balance."}
-          end
-      end
-    end)
+          end)
+          {:ok, amount}
+        end
+    end
   end
+
 
 
 
