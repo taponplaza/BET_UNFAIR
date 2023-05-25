@@ -74,10 +74,6 @@ defmodule BetUnfair.User do
   end
 
 
-
-
-
-
   def user_get(user_id) do
     case Repo.get_by(__MODULE__, user_id: user_id) do
       nil ->
