@@ -7,11 +7,10 @@ defmodule BetUnfair.Market do
   @market_statuses ["active", "frozen", "cancelled", "settled"]
 
   schema "markets" do
-    field :name, :string
+    field :name, :string, primary_key: true
     field :description, :string
     field :status, :string, default: "active"
     field :result, :boolean
-    has_many :bets, Bet
 
     timestamps()
   end

@@ -5,10 +5,9 @@ defmodule BetUnfair.User do
   alias BetUnfair.{Repo, Bet}
 
   schema "users" do
-    field :user_id, :string
+    field :user_id, :string, primary_key: true
     field :name, :string
     field :balance, :integer, default: 0
-    has_many :bets, Bet
     timestamps()
   end
 

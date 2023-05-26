@@ -2,14 +2,13 @@ defmodule BetUnfair.Repo.Migrations.CreateMarkets do
   use Ecto.Migration
 
   def change do
-    create table(:markets) do
-      add :name, :string
+    create table(:markets, primary_key: false) do
+      add :name, :string, primary_key: true
       add :description, :string
       add :status, :string, default: "active"
+      add :result, :boolean
 
       timestamps()
     end
-
-    create unique_index(:markets, :name)
   end
 end
