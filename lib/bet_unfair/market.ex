@@ -1,12 +1,16 @@
 defmodule BetUnfair.Market do
   use Ecto.Schema
   import Ecto.Changeset
+  import Ecto.Query
   alias BetUnfair.{Repo, Bet}
+
+  @market_statuses ["active", "frozen", "cancelled", "settled"]
 
   schema "markets" do
     field :name, :string
     field :description, :string
     field :status, :string, default: "active"
+    field :result, :boolean
     has_many :bets, Bet
 
     timestamps()
@@ -14,8 +18,9 @@ defmodule BetUnfair.Market do
 
   def changeset(market, attrs) do
     market
-    |> cast(attrs, [:name, :description, :status])
+    |> cast(attrs, [:name, :description, :status, :result])
     |> validate_required([:name, :description, :status])
+    |> validate_inclusion(:status, @market_statuses)
     |> unique_constraint(:name, message: "This market name is already taken")
   end
 
@@ -35,6 +40,11 @@ defmodule BetUnfair.Market do
 
   def market_list() do
     markets = Repo.all(__MODULE__)
+    {:ok, Enum.map(markets, & &1.name)}
+  end
+
+  def market_list_active() do
+    markets = Repo.all(from m in __MODULE__, where: m.status == "active")
     {:ok, Enum.map(markets, & &1.name)}
   end
 
@@ -73,7 +83,7 @@ defmodule BetUnfair.Market do
 
       market ->
         market
-        |> Ecto.Changeset.change(status: {:settled, result})
+        |> Ecto.Changeset.change(status: "settled", result: result)
         |> Repo.update()
 
         :ok
@@ -95,6 +105,27 @@ defmodule BetUnfair.Market do
     end
   end
 
+  def market_pending_backs(market_id) do
+    market = Repo.get_by(__MODULE__, name: market_id)
+    if market do
+      query = from(b in Bet, where: b.market_id == ^market.id and b.bet_type == "back" and b.status == "active", order_by: [:asc, :odds])
+      bets = Repo.all(query)
+      {:ok, Enum.map(bets, fn bet -> {bet.odds, bet.id} end)}
+    else
+      {:error, "Market does not exist."}
+    end
+  end
+
+  def market_pending_lays(market_id) do
+    market = Repo.get_by(__MODULE__, name: market_id)
+    if market do
+      query = from(b in Bet, where: b.market_id == ^market.id and b.bet_type == "lay" and b.status == "active", order_by: [:desc, :odds])
+      bets = Repo.all(query)
+      {:ok, Enum.map(bets, fn bet -> {bet.odds, bet.id} end)}
+    else
+      {:error, "Market does not exist."}
+    end
+  end
 
   def market_get(market_id) do
     case Repo.get_by(__MODULE__, name: market_id) do
@@ -102,13 +133,26 @@ defmodule BetUnfair.Market do
         {:error, "Market does not exist."}
 
       market ->
-        {:ok,
-          %{
-            name: market.name,
-            description: market.description,
-            status: market.status
-          }
-        }
+        market_details =
+          if market.status == "settled" do
+            %{name: market.name, description: market.description, status: {:settled, market.result}}
+          else
+            %{name: market.name, description: market.description, status: String.to_atom(market.status)}
+          end
+
+        {:ok, market_details}
+    end
+  end
+
+
+  def market_match(market_id) do
+    case Repo.get_by(__MODULE__, name: market_id) do
+      nil ->
+        {:error, "Market does not exist."}
+
+      market ->
+        Bet.match_bets(market_id)
+        :ok
     end
   end
 end

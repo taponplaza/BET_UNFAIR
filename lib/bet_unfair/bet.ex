@@ -1,7 +1,11 @@
 defmodule BetUnfair.Bet do
   use Ecto.Schema
   import Ecto.Changeset
-  alias BetUnfair.{Repo, Market, User}
+  import Ecto.Query
+  alias BetUnfair.{Repo, Market, User, Bet, Match}
+
+  @bet_statuses ["active", "cancelled", "market_cancelled", "market_settled"]
+  @bet_types ["back", "lay"]
 
   schema "bets" do
     belongs_to :user, User, foreign_key: :user_id, type: :string
@@ -11,7 +15,6 @@ defmodule BetUnfair.Bet do
     field :bet_type, :string
     field :original_stake, :integer
     field :remaining_stake, :integer
-    field :matched_bets, {:array, :integer}
     field :status, :string
 
     timestamps()
@@ -19,8 +22,10 @@ defmodule BetUnfair.Bet do
 
   def changeset(bet, attrs) do
     bet
-    |> cast(attrs, [:user_id, :market_id, :amount, :odds, :bet_type, :original_stake, :remaining_stake, :matched_bets, :status])
-    |> validate_required([:user_id, :market_id, :amount, :odds, :bet_type, :original_stake, :remaining_stake, :matched_bets, :status])
+    |> cast(attrs, [:user_id, :market_id, :amount, :odds, :bet_type, :original_stake, :remaining_stake, :status])
+    |> validate_required([:user_id, :market_id, :amount, :odds, :bet_type, :original_stake, :remaining_stake, :status])
+    |> validate_inclusion(:status, @bet_statuses)
+    |> validate_inclusion(:bet_type, @bet_types)
   end
 
   def bet_back(user_id, market_id, stake, odds) do
@@ -55,21 +60,52 @@ defmodule BetUnfair.Bet do
 
   def bet_get(bet_id) do
     case Repo.get(__MODULE__, bet_id) do
-      nil -> {:error, "Bet not found."}
-      bet -> {:ok, bet}
+      nil ->
+        {:error, "Bet not found."}
+
+      bet ->
+        matched_bets = Match.get_matched_bets(bet_id)
+
+        bet_details =
+          case bet.status do
+            "market_settled" ->
+              # fetch the market result
+              {:ok, market} = Market.market_get(bet.market_id)
+              market_result = case market.status do
+                {:settled, result} -> result
+                _ -> nil
+              end
+
+              %{bet_type: String.to_atom(bet.bet_type),
+                market_id: bet.market_id,
+                user_id: bet.user_id,
+                odds: bet.odds,
+                original_stake: bet.original_stake,
+                remaining_stake: bet.remaining_stake,
+                matched_bets: matched_bets,
+                status: {:market_settled, market_result}}
+            _ ->
+              %{bet_type: String.to_atom(bet.bet_type),
+                market_id: bet.market_id,
+                user_id: bet.user_id,
+                odds: bet.odds,
+                original_stake: bet.original_stake,
+                remaining_stake: bet.remaining_stake,
+                matched_bets: matched_bets,
+                status: String.to_atom(bet.status)}
+          end
+        {:ok, bet_details}
     end
   end
 
 
-  def get_unmatched_bets(market_id, bet_type) do
-    from(b in __MODULE__,
+  defp get_unmatched_bets(market_id, bet_type) do
+    from(b in Bet,
       where: b.market_id == ^market_id and b.bet_type == ^bet_type and b.status == "active",
       order_by: [desc: b.odds, asc: b.inserted_at]
     )
     |> Repo.all()
   end
-
-
 
 
   def match_bets(market_id) do
@@ -80,22 +116,29 @@ defmodule BetUnfair.Bet do
       if back_bet.odds <= lay_bet.odds do
         match_amount = min(back_bet.remaining_stake, lay_bet.remaining_stake)
 
-        # Update the bets
-        Bet.update_remaining_stake(back_bet, back_bet.remaining_stake - match_amount)
-        Bet.update_remaining_stake(lay_bet, lay_bet.remaining_stake - match_amount)
+        # Compute new stakes and statuses
+        new_back_stake = back_bet.remaining_stake - match_amount
+        new_lay_stake = lay_bet.remaining_stake - match_amount
+        new_back_status = if(new_back_stake == 0, do: "matched", else: "active")
+        new_lay_status = if(new_lay_stake == 0, do: "matched", else: "active")
 
-        # Record the match
-        create_match(back_bet, lay_bet, match_amount)
+        # Begin a new multi operation
+        multi =
+          Ecto.Multi.new()
+          |> Ecto.Multi.update(:update_back_bet, Bet.changeset(back_bet, %{remaining_stake: new_back_stake, status: new_back_status}))
+          |> Ecto.Multi.update(:update_lay_bet, Bet.changeset(lay_bet, %{remaining_stake: new_lay_stake, status: new_lay_status}))
+          |> Ecto.Multi.insert(:create_match, Match.changeset(%Match{}, %{back_bet_id: back_bet.id, lay_bet_id: lay_bet.id, amount: match_amount}))
+
+        case Repo.transaction(multi) do
+          {:ok, _} ->
+            :ok
+
+          {:error, failed_operation, failed_value, _changes_so_far} ->
+            IO.inspect(failed_operation)
+            IO.inspect(failed_value)
+            {:error, "Failed to match bets."}
+        end
       end
     end
   end
-
-  def update_remaining_stake(bet, new_stake) do
-    new_status = if new_stake == 0, do: "matched", else: "active"
-
-    bet
-    |> Ecto.Changeset.change(%{remaining_stake: new_stake, status: new_status})
-    |> Repo.update()
-  end
-
 end
