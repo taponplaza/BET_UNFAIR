@@ -58,14 +58,29 @@ defmodule Betunfair.Bet do
 
 
   def bet_cancel(bet_id) do
-    case Repo.get(__MODULE__, bet_id) do
-      nil -> {:error, "Bet not found."}
-      bet ->
-        bet
-        |> Ecto.Changeset.change(%{status: "cancelled"})
-        |> Repo.update()
-    end
+    Repo.transaction(fn ->
+      bet = Repo.get(__MODULE__, bet_id)
+
+      case bet do
+        nil ->
+          {:error, "Bet not found."}
+
+        bet ->
+          user = Repo.get(User, bet.user_id)
+
+          user
+          |> Ecto.Changeset.change(%{balance: user.balance + bet.remaining_stake})
+          |> Repo.update!()
+
+          bet
+          |> Ecto.Changeset.change(%{status: "cancelled"})
+          |> Repo.update!()
+
+          :ok
+      end
+    end)
   end
+
 
   def bet_get(bet_id) do
     case Repo.get(__MODULE__, bet_id) do

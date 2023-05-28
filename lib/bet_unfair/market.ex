@@ -2,7 +2,7 @@ defmodule Betunfair.Market do
   use Ecto.Schema
   import Ecto.Changeset
   import Ecto.Query
-  alias Betunfair.{Repo, Bet, Match}
+  alias Betunfair.{Repo, Bet, Match, Market}
 
   @primary_key {:name, :string, autogenerate: false}
   @market_statuses ["active", "frozen", "cancelled", "settled"]
@@ -58,9 +58,21 @@ defmodule Betunfair.Market do
         |> Ecto.Changeset.change(status: "cancelled")
         |> Repo.update()
 
+        bets = Betunfair.Bet |> Ecto.Query.where(market_id: ^market_id) |> Repo.all()
+
+        Enum.each(bets, fn bet ->
+          Betunfair.User.user_deposit(bet.user_id, bet.original_stake)
+
+          bet
+          |> Ecto.Changeset.change(status: "market_cancelled")
+          |> Repo.update()
+        end)
+
         :ok
-    end
+      end
   end
+
+
 
   def market_freeze(market_id) do
     case Repo.get_by(__MODULE__, name: market_id) do
@@ -86,8 +98,32 @@ defmodule Betunfair.Market do
         |> Ecto.Changeset.change(status: "settled", result: result)
         |> Repo.update()
 
+        bets = Bet |> Ecto.Query.where(market_id: ^market_id) |> Repo.all()
+
+        Enum.each(bets, fn bet ->
+          matches =  Match.get_matched_bets(bet.id)
+          has_won = result == (bet.bet_type == "back")
+
+          total_matched_amount  = Enum.reduce(matches, 0, fn match, acc ->
+              acc + match.matched_amount
+          end)
+
+          if has_won do
+            winnings = bet.original_stake + total_matched_amount
+            Betunfair.User.user_deposit(bet.user_id, winnings)
+
+          else
+            lossings = bet.original_stake - total_matched_amount
+            Betunfair.User.user_deposit(bet.user_id, lossings)
+          end
+
+          bet
+          |> Ecto.Changeset.change(status: "market_settled")
+          |> Repo.update()
+        end)
+
         :ok
-    end
+      end
   end
 
   def market_bets(market_id) do
@@ -174,11 +210,13 @@ defmodule Betunfair.Market do
           match_amount = trunc(lay_bet.remaining_stake / (back_odds / 100 - 1))
           new_back_stake = back_bet.remaining_stake - match_amount
           new_lay_stake = 0
+          match_amount = lay_bet.remaining_stake
           {new_back_stake, new_lay_stake, match_amount}
         else
           match_amount = trunc(back_bet.remaining_stake * back_odds / 100  - back_bet.remaining_stake)
           new_back_stake = 0
           new_lay_stake = lay_bet.remaining_stake - match_amount
+          match_amount = back_bet.remaining_stake
           {new_back_stake, new_lay_stake, match_amount}
         end
 
