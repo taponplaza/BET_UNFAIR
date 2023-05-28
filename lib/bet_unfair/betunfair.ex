@@ -1,6 +1,6 @@
-defmodule BetUnfair do
+defmodule Betunfair do
   use GenServer
-  alias BetUnfair.{User, Bet, Market, Repo, Match}
+  alias Betunfair.{User, Bet, Market, Repo, Match}
 
   # Client
   def start_link(_) do

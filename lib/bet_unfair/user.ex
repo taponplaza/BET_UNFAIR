@@ -1,13 +1,14 @@
-defmodule BetUnfair.User do
+defmodule Betunfair.User do
   use Ecto.Schema
   import Ecto.Changeset
   import Ecto.Query
-  alias BetUnfair.{Repo, Bet}
+  alias Betunfair.{Repo, Bet}
 
   @primary_key {:user_id, :string, autogenerate: false}
   schema "users" do
     field :name, :string
     field :balance, :integer, default: 0
+    has_many :bets, Betunfair.Bet, foreign_key: :user_id
     timestamps()
   end
 
@@ -109,7 +110,7 @@ defmodule BetUnfair.User do
           user
           |> Repo.preload(:bets)
           |> Map.get(:bets)
-          |> Enum.map(& &1.bet_id)
+          |> Enum.map(& &1.id)
 
         {:ok, user_bets}
     end

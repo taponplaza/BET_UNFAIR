@@ -1,6 +1,6 @@
-defmodule BetUnfair.BetTest do
+defmodule Betunfair.BetTest do
   use ExUnit.Case, async: true
-  alias BetUnfair.{Repo, Bet, User, Market}
+  alias Betunfair.{Repo, Bet, User, Market}
 
   setup do
     # Clear the database before each test

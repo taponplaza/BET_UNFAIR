@@ -1,8 +1,8 @@
-defmodule BetUnfair.Bet do
+defmodule Betunfair.Bet do
   use Ecto.Schema
   import Ecto.Changeset
   import Ecto.Query
-  alias BetUnfair.{Repo, Market, User, Bet, Match}
+  alias Betunfair.{Repo, Market, User, Bet, Match}
 
   @bet_statuses ["active", "cancelled", "market_cancelled", "market_settled", "matched"]
   @bet_types ["back", "lay"]

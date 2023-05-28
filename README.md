@@ -1,4 +1,4 @@
-# BetUnfair
+# Betunfair
 
 **TODO: Add description**
 

@@ -1,4 +1,4 @@
-defmodule BetUnfair.Repo.Migrations.UpdateForeignKeys do
+defmodule Betunfair.Repo.Migrations.UpdateForeignKeys do
   use Ecto.Migration
 
   def up do

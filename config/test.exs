@@ -1,6 +1,6 @@
 import Config
 
-config :bet_unfair, BetUnfair.Repo,
+config :bet_unfair, Betunfair.Repo,
   username: "postgres",
   password: "postgres",
   database: "bet_unfair_db",

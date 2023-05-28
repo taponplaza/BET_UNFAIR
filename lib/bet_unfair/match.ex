@@ -1,8 +1,8 @@
-defmodule BetUnfair.Match do
+defmodule Betunfair.Match do
   use Ecto.Schema
   import Ecto.Changeset
   import Ecto.Query
-  alias BetUnfair.{Repo, Bet, Match}
+  alias Betunfair.{Repo, Bet, Match}
 
   schema "matches" do
     belongs_to :back_bet, Bet, foreign_key: :back_bet_id

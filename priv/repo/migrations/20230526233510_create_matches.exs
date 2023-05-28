@@ -1,4 +1,4 @@
-defmodule BetUnfair.Repo.Migrations.CreateMatches do
+defmodule Betunfair.Repo.Migrations.CreateMatches do
   use Ecto.Migration
 
   def change do

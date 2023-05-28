@@ -1,4 +1,4 @@
-defmodule BetUnfair.MixProject do
+defmodule Betunfair.MixProject do
   use Mix.Project
 
   def project do
@@ -15,7 +15,7 @@ defmodule BetUnfair.MixProject do
   def application do
     [
       extra_applications: [:logger],
-      mod: {BetUnfair.Application, []}
+      mod: {Betunfair.Application, []}
     ]
   end
 

@@ -1,6 +1,6 @@
-defmodule BetUnfair do
+defmodule Betunfair do
   @moduledoc """
-  Documentation for `BetUnfair`.
+  Documentation for `Betunfair`.
   """
 
   @doc """
@@ -8,7 +8,7 @@ defmodule BetUnfair do
 
   ## Examples
 
-      iex> BetUnfair.hello()
+      iex> Betunfair.hello()
       :world
 
   """

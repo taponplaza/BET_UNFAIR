@@ -1,6 +1,6 @@
-defmodule BetUnfair.UserTest do
+defmodule Betunfair.UserTest do
   use ExUnit.Case, async: true
-  alias BetUnfair.{Repo, Bet, User, Market}
+  alias Betunfair.{Repo, Bet, User, Market}
 
 
   setup do
