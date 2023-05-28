@@ -306,6 +306,36 @@ defmodule Betunfair.BetTest do
     assert {:ok,%{balance: 2400}} = Betunfair.user_get(u2)
   end
 
+  test "bet_cancel1" do
+    assert :ok = Betunfair.clean("testdb")
+    assert :ok = Betunfair.start_link("testdb")
+    assert {:ok,u1} = Betunfair.user_create("u1","Francisco Gonzalez")
+    assert {:ok,u2} = Betunfair.user_create("u2","Maria Fernandez")
+    assert is_ok(Betunfair.user_deposit(u1,2000))
+    assert is_ok(Betunfair.user_deposit(u2,2000))
+    assert {:ok,%{balance: 2000}} = Betunfair.user_get(u1)
+    assert {:ok,m1} = Betunfair.market_create("rmw","Real Madrid wins")
+    assert {:ok,bb1} = Betunfair.bet_back(u1,m1,1000,150)
+    assert {:ok,bb2} = Betunfair.bet_back(u1,m1,1000,153)
+    assert {:ok,%{balance: 0}} = Betunfair.user_get(u1)
+    assert true = (bb1 != bb2)
+    assert {:ok,bl1} = Betunfair.bet_lay(u2,m1,100,140)
+    assert {:ok,bl2} = Betunfair.bet_lay(u2,m1,100,150)
+    assert {:ok,%{balance: 1800}} = Betunfair.user_get(u2)
+    assert is_ok(Betunfair.market_match(m1))
+    assert is_ok(Betunfair.bet_cancel(bl1))
+    assert is_ok(Betunfair.bet_cancel(bb2))
+    assert {:ok,%{balance: 1000}} = Betunfair.user_get(u1)
+    assert {:ok,%{balance: 1900}} = Betunfair.user_get(u2)
+    assert is_ok(Betunfair.bet_cancel(bl2))
+    assert is_ok(Betunfair.bet_cancel(bb1))
+    assert {:ok,%{balance: 1800}} = Betunfair.user_get(u1)
+    assert {:ok,%{balance: 1900}} = Betunfair.user_get(u2)
+    assert is_ok(Betunfair.market_settle(m1,false))
+    assert {:ok,%{balance: 1800}} = Betunfair.user_get(u1)
+    assert {:ok,%{balance: 2200}} = Betunfair.user_get(u2)
+  end
+
 
   defp is_error(:error),do: true
   defp is_error({:error,_}), do: true

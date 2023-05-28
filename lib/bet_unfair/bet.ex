@@ -82,7 +82,7 @@ defmodule Betunfair.Bet do
           |> Repo.update!()
 
           bet
-          |> Ecto.Changeset.change(%{status: "cancelled"})
+          |> Ecto.Changeset.change(%{status: "cancelled", original_stake: bet.original_stake - bet.remaining_stake, remaining_stake: 0})
           |> Repo.update!()
 
           :ok

@@ -107,7 +107,7 @@ defmodule Betunfair.Market do
 
           if has_won do
             total_matched_amount  = Enum.reduce(matches, 0, fn match, acc ->
-                acc + match.matched_amount
+              acc + match.matched_amount
             end)
 
             if bet.bet_type != "back" do
@@ -126,10 +126,10 @@ defmodule Betunfair.Market do
           |> Ecto.Changeset.change(status: "market_settled")
           |> Repo.update()
         end)
-
-        :ok
-      end
+      :ok
+    end
   end
+
 
 
   def market_bets(market_id) do
@@ -222,6 +222,7 @@ defmodule Betunfair.Market do
           match_amount = trunc(back_bet.remaining_stake * back_odds / 100  - back_bet.remaining_stake)
           new_back_stake = 0
           new_lay_stake = lay_bet.remaining_stake - match_amount
+          match_amount = back_bet.remaining_stake
           {new_back_stake, new_lay_stake, match_amount}
         end
 
