@@ -29,32 +29,41 @@ defmodule Betunfair.Bet do
   end
 
   def bet_back(user_id, market_id, stake, odds) do
-    case User.user_withdraw(user_id, stake) do
-      {:ok, _} ->
-        bet_changeset =
-          %__MODULE__{}
-          |> changeset(%{user_id: user_id, market_id: market_id, amount: stake, odds: odds, bet_type: "back", original_stake: stake, remaining_stake: stake, matched_bets: [], status: "active"})
-        case Repo.insert(bet_changeset) do
-          {:ok, bet} -> {:ok, bet.id}
-          _ -> {:error, "Failed to place back bet."}
+    case Market.market_get(market_id) do
+      {:ok, %{status: "active"}} ->
+        case User.user_withdraw(user_id, stake) do
+          {:ok, _} ->
+            bet_changeset =
+              %__MODULE__{}
+              |> changeset(%{user_id: user_id, market_id: market_id, amount: stake, odds: odds, bet_type: "back", original_stake: stake, remaining_stake: stake, matched_bets: [], status: "active"})
+            case Repo.insert(bet_changeset) do
+              {:ok, bet} -> {:ok, bet.id}
+              _ -> {:error, "Failed to place back bet."}
+            end
+          {:error, _} -> {:error, "Insufficient balance to place bet."}
         end
-      {:error, _} -> {:error, "Insufficient balance to place bet."}
+      _ -> {:error, "Market is not active"}
     end
   end
 
   def bet_lay(user_id, market_id, stake, odds) do
-    case User.user_withdraw(user_id, stake) do
-      {:ok, _} ->
-        bet_changeset =
-          %__MODULE__{}
-          |> changeset(%{user_id: user_id, market_id: market_id, amount: stake, odds: odds, bet_type: "lay", original_stake: stake, remaining_stake: stake, matched_bets: [], status: "active"})
-        case Repo.insert(bet_changeset) do
-          {:ok, bet} -> {:ok, bet.id}
-          _ -> {:error, "Failed to place lay bet."}
+    case Market.market_get(market_id) do
+      {:ok, %{status: "active"}} ->
+        case User.user_withdraw(user_id, stake) do
+          {:ok, _} ->
+            bet_changeset =
+              %__MODULE__{}
+              |> changeset(%{user_id: user_id, market_id: market_id, amount: stake, odds: odds, bet_type: "lay", original_stake: stake, remaining_stake: stake, matched_bets: [], status: "active"})
+            case Repo.insert(bet_changeset) do
+              {:ok, bet} -> {:ok, bet.id}
+              _ -> {:error, "Failed to place lay bet."}
+            end
+          {:error, _} -> {:error, "Insufficient balance to place bet."}
         end
-      {:error, _} -> {:error, "Insufficient balance to place bet."}
+      _ -> {:error, "Market is not active"}
     end
   end
+
 
 
   def bet_cancel(bet_id) do

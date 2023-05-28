@@ -73,7 +73,6 @@ defmodule Betunfair.Market do
   end
 
 
-
   def market_freeze(market_id) do
     case Repo.get_by(__MODULE__, name: market_id) do
       nil ->
@@ -83,6 +82,8 @@ defmodule Betunfair.Market do
         market
         |> Ecto.Changeset.change(status: "frozen")
         |> Repo.update()
+
+        bets = Bet |> Ecto.Query.where(market_id: ^market_id) |> Repo.all()
 
         :ok
     end
@@ -104,17 +105,21 @@ defmodule Betunfair.Market do
           matches =  Match.get_matched_bets(bet.id)
           has_won = result == (bet.bet_type == "back")
 
-          total_matched_amount  = Enum.reduce(matches, 0, fn match, acc ->
-              acc + match.matched_amount
-          end)
-
           if has_won do
-            winnings = bet.original_stake + total_matched_amount
-            Betunfair.User.user_deposit(bet.user_id, winnings)
+            total_matched_amount  = Enum.reduce(matches, 0, fn match, acc ->
+                acc + match.matched_amount
+            end)
 
+            if bet.bet_type != "back" do
+              winnings = bet.original_stake + total_matched_amount
+              Betunfair.User.user_deposit(bet.user_id, winnings)
+            else
+              total_matched_amount = trunc(total_matched_amount * (bet.odds / 100 - 1))
+              winnings = bet.original_stake + total_matched_amount
+              Betunfair.User.user_deposit(bet.user_id, winnings)
+            end
           else
-            lossings = bet.original_stake - total_matched_amount
-            Betunfair.User.user_deposit(bet.user_id, lossings)
+            Betunfair.User.user_deposit(bet.user_id, bet.remaining_stake)
           end
 
           bet
@@ -125,6 +130,7 @@ defmodule Betunfair.Market do
         :ok
       end
   end
+
 
   def market_bets(market_id) do
     case Repo.get_by(__MODULE__, name: market_id) do
@@ -181,12 +187,13 @@ defmodule Betunfair.Market do
           if market.status == "settled" do
             %{name: market.name, description: market.description, status: {:settled, market.result}}
           else
-            %{name: market.name, description: market.description, status: String.to_atom(market.status)}
+            %{name: market.name, description: market.description, status: market.status}
           end
 
         {:ok, market_details}
     end
   end
+
 
   def market_match(market_id) do
     case {market_pending_backs(market_id), market_pending_lays(market_id)} do
@@ -210,13 +217,11 @@ defmodule Betunfair.Market do
           match_amount = trunc(lay_bet.remaining_stake / (back_odds / 100 - 1))
           new_back_stake = back_bet.remaining_stake - match_amount
           new_lay_stake = 0
-          match_amount = lay_bet.remaining_stake
           {new_back_stake, new_lay_stake, match_amount}
         else
           match_amount = trunc(back_bet.remaining_stake * back_odds / 100  - back_bet.remaining_stake)
           new_back_stake = 0
           new_lay_stake = lay_bet.remaining_stake - match_amount
-          match_amount = back_bet.remaining_stake
           {new_back_stake, new_lay_stake, match_amount}
         end
 
