@@ -35,8 +35,10 @@ defmodule BetUnfair.Match do
   def get_matched_bets(bet_id) do
     query = from m in Match,
       where: m.back_bet_id == ^bet_id or m.lay_bet_id == ^bet_id,
-      select: %{id: m.id, back_bet_id: m.back_bet_id, lay_bet_id: m.lay_bet_id, amount: m.amount}
+      select: %{id: m.id, back_bet_id: m.back_bet_id, lay_bet_id: m.lay_bet_id, matched_amount: m.matched_amount}
 
     Repo.all(query)
   end
+
+
 end

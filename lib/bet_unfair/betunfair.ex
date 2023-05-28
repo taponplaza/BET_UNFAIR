@@ -3,26 +3,30 @@ defmodule BetUnfair do
   alias BetUnfair.{User, Bet, Market, Repo, Match}
 
   # Client
-
-  def start_link(name) do
-    GenServer.start_link(__MODULE__, name, name: String.to_atom(name))
+  def start_link(_) do
+    case GenServer.start_link(__MODULE__, %{}, name: __MODULE__) do
+      :ignore -> :ok
+      {:error, {:already_started, _pid}} -> :ok
+      other -> other
+    end
   end
 
-  def stop(), do: GenServer.cast(__MODULE__, :stop)
 
-  def clean(name), do: GenServer.call(String.to_atom(name), :clean)
+  def clean(_), do: GenServer.call(__MODULE__, :clean)
+
+  def stop do
+    GenServer.cast(__MODULE__, :stop)
+  end
 
   # These functions represent the main operations of the exchange.
 
   def user_create(user_id, name), do: GenServer.call(__MODULE__, {:user_create, user_id, name})
 
-  def create_market(name, description), do: GenServer.call(__MODULE__, {:create_market, name, description})
+  def market_create(name, description), do: GenServer.call(__MODULE__, {:market_create, name, description})
 
   def place_bet(user_id, market_id, stake, odds, bet_type), do: GenServer.call(__MODULE__, {:place_bet, user_id, market_id, stake, odds, bet_type})
 
   def cancel_bet(bet_id), do: GenServer.call(__MODULE__, {:cancel_bet, bet_id})
-
-  def match_bets(market_id), do: GenServer.call(__MODULE__, {:match_bets, market_id})
 
   def user_deposit(user_id, amount), do: GenServer.call(__MODULE__, {:user_deposit, user_id, amount})
 
@@ -65,9 +69,28 @@ defmodule BetUnfair do
 
   # Server
 
-  def init(name) do
-    {:ok, %{name: name}}
+  def init(_) do
+    {:ok, %{}}
   end
+
+  def handle_call(:clean, _from, state) do
+    try do
+      Repo.transaction(fn ->
+        Repo.delete_all(Market)
+        Repo.delete_all(Bet)
+        Repo.delete_all(Match)
+        Repo.delete_all(User)
+      end)
+      IO.puts "Clean operation completed successfully"
+      {:reply, :ok, state}
+    rescue
+      _e in Ecto.StaleEntryError ->
+        IO.puts "Failed to complete clean operation"
+        {:reply, :error, state}
+    end
+  end
+
+
 
   def handle_cast(:stop, state) do
     {:stop, :normal, state}
@@ -78,7 +101,6 @@ defmodule BetUnfair do
     case bet_placer.(user_id, market_id, stake, odds) do
       {:ok, bet_id} ->
         IO.puts "Bet #{bet_id} placed successfully"
-        Bet.match_bets(market_id)
         {:noreply, state}
       {:error, _reason} ->
         IO.puts "Failed to place bet"
@@ -86,19 +108,12 @@ defmodule BetUnfair do
     end
   end
 
-  def handle_call(:clean, _from, state) do
-    Repo.delete_all(User)
-    Repo.delete_all(Bet)
-    Repo.delete_all(Market)
-    Repo.delete_all(Match)
-    {:reply, :ok, %{name: state.name}}
-  end
 
   def handle_call({:user_create, user_id, name}, _from, state) do
     {:reply, User.user_create(user_id, name), state}
   end
 
-  def handle_call({:create_market, name, description}, _from, state) do
+  def handle_call({:market_create, name, description}, _from, state) do
     {:reply, Market.market_create(name, description), state}
   end
 
@@ -111,10 +126,6 @@ defmodule BetUnfair do
           IO.puts "Failed to cancel bet"
           {:reply, :error, state}
       end
-    end
-
-    def handle_call({:match_bets, market_id}, _from, state) do
-      {:reply, Bet.match_bets(market_id), state}
     end
 
     def handle_call({:user_deposit, user_id, amount}, _from, state) do

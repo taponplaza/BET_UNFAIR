@@ -4,31 +4,38 @@ defmodule BetUnfair.User do
   import Ecto.Query
   alias BetUnfair.{Repo, Bet}
 
+  @primary_key {:user_id, :string, autogenerate: false}
   schema "users" do
-    field :user_id, :string, primary_key: true
     field :name, :string
     field :balance, :integer, default: 0
     timestamps()
   end
 
+
   def changeset(user, attrs) do
     user
     |> cast(attrs, [:user_id, :name, :balance])
     |> validate_required([:user_id, :name])
-    |> unique_constraint(:user_id, message: "This user_id is already taken")
+    |> unique_constraint(:user_id)
   end
 
   def user_create(user_id, name) do
-    user_changeset =
-      %__MODULE__{}
-      |> changeset(%{user_id: user_id, name: name})
+    existing_user = Repo.get_by(__MODULE__, user_id: user_id)
 
-    case Repo.insert(user_changeset) do
-      {:ok, user} ->
-        {:ok, user.user_id}
+    if existing_user do
+      :error
+    else
+      user_changeset =
+        %__MODULE__{}
+        |> changeset(%{user_id: user_id, name: name})
 
-      {:error, _changeset} ->
-        {:error, "User with the same ID already exists."}
+      case Repo.insert(user_changeset, returning: true, return_sources: true) do
+        {:ok, user} ->
+          {:ok, user.user_id}
+
+        _ ->
+          :error
+      end
     end
   end
 
@@ -49,6 +56,11 @@ defmodule BetUnfair.User do
       end
     end)
   end
+
+  def user_deposit(_, amount) when is_integer(amount) and amount <= 0, do: {:error, "Invalid deposit amount"}
+
+  def user_deposit(_, _), do: {:error, "Invalid deposit amount"}
+
 
 
 

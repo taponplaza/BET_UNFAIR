@@ -9,7 +9,7 @@ defmodule BetUnfair.Application do
   def start(_type, _args) do
     children = [
       BetUnfair.Repo,
-      BetUnfair.Exchange
+      BetUnfair
       # Starts a worker by calling: BetUnfair.Worker.start_link(arg)
       # {BetUnfair.Worker, arg}
     ]
