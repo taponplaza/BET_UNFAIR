@@ -5,12 +5,12 @@ defmodule Betunfair do
   # Client
   def start_link(_) do
     case GenServer.start_link(__MODULE__, %{}, name: __MODULE__) do
-      :ignore -> :ok
-      {:error, {:already_started, _pid}} -> :ok
+      {:ok, pid} -> {:ok, pid}
+      :ignore -> {:error, :ignore}
+      {:error, {:already_started, _pid}} -> {:ok, _pid}
       other -> other
     end
   end
-
 
   def clean(_), do: GenServer.call(__MODULE__, :clean)
 
@@ -76,20 +76,19 @@ defmodule Betunfair do
   def handle_call(:clean, _from, state) do
     try do
       Repo.transaction(fn ->
-        Repo.delete_all(Market)
-        Repo.delete_all(Bet)
         Repo.delete_all(Match)
+        Repo.delete_all(Bet)
+        Repo.delete_all(Market)
         Repo.delete_all(User)
       end)
       IO.puts "Clean operation completed successfully"
-      {:reply, :ok, state}
+      {:reply, {:ok, :cleaned}, state}
     rescue
       _e in Ecto.StaleEntryError ->
         IO.puts "Failed to complete clean operation"
-        {:reply, :error, state}
+        {:reply, {:error, :failed_to_clean}, state}
     end
   end
-
 
 
   def handle_cast(:stop, state) do
@@ -118,15 +117,8 @@ defmodule Betunfair do
   end
 
   def handle_call({:cancel_bet, bet_id}, _from, state) do
-    case Bet.bet_cancel(bet_id) do
-      {:ok, _bet} ->
-        IO.puts "Bet #{bet_id} cancelled successfully"
-        {:reply, :ok, state}
-        {:error, _reason} ->
-          IO.puts "Failed to cancel bet"
-          {:reply, :error, state}
-      end
-    end
+    {:reply, Bet.bet_cancel(bet_id), state}
+  end
 
     def handle_call({:user_deposit, user_id, amount}, _from, state) do
       {:reply, User.user_deposit(user_id, amount), state}

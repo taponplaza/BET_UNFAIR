@@ -70,11 +70,14 @@ defmodule Betunfair.Bet do
     Repo.transaction(fn ->
       bet = Repo.get(__MODULE__, bet_id)
 
-      case bet do
-        nil ->
+      case {bet, bet && bet.status} do
+        {nil, _} ->
           {:error, "Bet not found."}
 
-        bet ->
+        {_, "cancelled"} ->
+          {:error, "Bet already cancelled."}
+
+        {_, "active"} ->
           user = Repo.get(User, bet.user_id)
 
           user
@@ -86,9 +89,13 @@ defmodule Betunfair.Bet do
           |> Repo.update!()
 
           :ok
+
+        {_, _} ->
+          {:error, "Cannot cancel a bet in current state."}
       end
     end)
   end
+
 
 
   def bet_get(bet_id) do

@@ -14,8 +14,8 @@ defmodule Betunfair.BetTest do
 
 
   test "user_create_deposit_get" do
-    assert :ok = Betunfair.clean("testdb")
-    assert :ok = Betunfair.start_link("testdb")
+    assert {:ok,_} = Betunfair.clean("testdb")
+    assert  {:ok,_} = Betunfair.start_link("testdb")
     assert {:ok,u1} = Betunfair.user_create("u1","Francisco Gonzalez")
     assert is_error(Betunfair.user_create("u1","Francisco Gonzalez"))
     assert is_ok(Betunfair.user_deposit(u1,2000))
@@ -26,8 +26,8 @@ defmodule Betunfair.BetTest do
   end
 
   test "user_bet1" do
-    assert :ok = Betunfair.clean("testdb")
-    assert :ok = Betunfair.start_link("testdb")
+    assert {:ok,_} = Betunfair.clean("testdb")
+    assert  {:ok,_} = Betunfair.start_link("testdb")
     assert {:ok,u1} = Betunfair.user_create("u1","Francisco Gonzalez")
     assert is_ok(Betunfair.user_deposit(u1,2000))
     assert {:ok,%{balance: 2000}} = Betunfair.user_get(u1)
@@ -41,8 +41,8 @@ defmodule Betunfair.BetTest do
   end
 
   test "user_persist" do
-    assert :ok = Betunfair.clean("testdb")
-    assert :ok = Betunfair.start_link("testdb")
+    assert {:ok,_} = Betunfair.clean("testdb")
+    assert  {:ok,_} = Betunfair.start_link("testdb")
     assert {:ok,u1} = Betunfair.user_create("u1","Francisco Gonzalez")
     assert is_ok(Betunfair.user_deposit(u1,2000))
     assert {:ok,%{balance: 2000}} = Betunfair.user_get(u1)
@@ -50,8 +50,8 @@ defmodule Betunfair.BetTest do
     assert {:ok,b} = Betunfair.bet_back(u1,m1,1000,150)
     assert {:ok,%{id: ^b, bet_type: :back, stake: 1000, odds: 150, status: :active}} = Betunfair.bet_get(b)
     assert is_ok(Betunfair.stop())
-    :timer.sleep(50)  # wait for 1 second
-    assert :ok = Betunfair.start_link("testdb")
+    :timer.sleep(5)  # wait for stop
+    assert  {:ok,_} = Betunfair.start_link("testdb")
     assert {:ok,%{balance: 1000}} = Betunfair.user_get(u1)
     assert {:ok,markets} = Betunfair.market_list()
     assert 1 = length(markets)
@@ -60,8 +60,8 @@ defmodule Betunfair.BetTest do
   end
 
   test "match_bets1" do
-    assert :ok = Betunfair.clean("testdb")
-    assert :ok = Betunfair.start_link("testdb")
+    assert {:ok,_} = Betunfair.clean("testdb")
+    assert  {:ok,_} = Betunfair.start_link("testdb")
     assert {:ok,u1} = Betunfair.user_create("u1","Francisco Gonzalez")
     assert {:ok,u2} = Betunfair.user_create("u2","Maria Fernandez")
     assert is_ok(Betunfair.user_deposit(u1,2000))
@@ -85,8 +85,8 @@ defmodule Betunfair.BetTest do
   end
 
   test "match_bets2" do
-    assert :ok = Betunfair.clean("testdb")
-    assert :ok = Betunfair.start_link("testdb")
+    assert {:ok,_} = Betunfair.clean("testdb")
+    assert  {:ok,_} = Betunfair.start_link("testdb")
     assert {:ok,u1} = Betunfair.user_create("u1","Francisco Gonzalez")
     assert {:ok,u2} = Betunfair.user_create("u2","Maria Fernandez")
     assert is_ok(Betunfair.user_deposit(u1,2000))
@@ -106,8 +106,8 @@ defmodule Betunfair.BetTest do
   end
 
   test "match_bets3" do
-    assert :ok = Betunfair.clean("testdb")
-    assert :ok = Betunfair.start_link("testdb")
+    assert {:ok,_} = Betunfair.clean("testdb")
+    assert  {:ok,_} = Betunfair.start_link("testdb")
     assert {:ok,u1} = Betunfair.user_create("u1","Francisco Gonzalez")
     assert {:ok,u2} = Betunfair.user_create("u2","Maria Fernandez")
     assert is_ok(Betunfair.user_deposit(u1,2000))
@@ -129,8 +129,8 @@ defmodule Betunfair.BetTest do
   end
 
   test "match_bets4" do
-    assert :ok = Betunfair.clean("testdb")
-    assert :ok = Betunfair.start_link("testdb")
+    assert {:ok,_} = Betunfair.clean("testdb")
+    assert  {:ok,_} = Betunfair.start_link("testdb")
     assert {:ok,u1} = Betunfair.user_create("u1","Francisco Gonzalez")
     assert {:ok,u2} = Betunfair.user_create("u2","Maria Fernandez")
     assert is_ok(Betunfair.user_deposit(u1,2000))
@@ -151,8 +151,8 @@ defmodule Betunfair.BetTest do
   end
 
   test "match_bets5" do
-    assert :ok = Betunfair.clean("testdb")
-    assert :ok = Betunfair.start_link("testdb")
+    assert {:ok,_} = Betunfair.clean("testdb")
+    assert  {:ok,_} = Betunfair.start_link("testdb")
     assert {:ok,u1} = Betunfair.user_create("u1","Francisco Gonzalez")
     assert {:ok,u2} = Betunfair.user_create("u2","Maria Fernandez")
     assert is_ok(Betunfair.user_deposit(u1,2000))
@@ -173,8 +173,8 @@ defmodule Betunfair.BetTest do
   end
 
   test "match_bets6" do
-    assert :ok = Betunfair.clean("testdb")
-    assert :ok = Betunfair.start_link("testdb")
+    assert {:ok,_} = Betunfair.clean("testdb")
+    assert  {:ok,_} = Betunfair.start_link("testdb")
     assert {:ok,u1} = Betunfair.user_create("u1","Francisco Gonzalez")
     assert {:ok,u2} = Betunfair.user_create("u2","Maria Fernandez")
     assert is_ok(Betunfair.user_deposit(u1,2000))
@@ -195,8 +195,8 @@ defmodule Betunfair.BetTest do
   end
 
   test "match_bets7" do
-    assert :ok = Betunfair.clean("testdb")
-    assert :ok = Betunfair.start_link("testdb")
+    assert {:ok,_} = Betunfair.clean("testdb")
+    assert  {:ok,_} = Betunfair.start_link("testdb")
     assert {:ok,u1} = Betunfair.user_create("u1","Francisco Gonzalez")
     assert {:ok,u2} = Betunfair.user_create("u2","Maria Fernandez")
     assert is_ok(Betunfair.user_deposit(u1,2000))
@@ -219,8 +219,8 @@ defmodule Betunfair.BetTest do
   end
 
   test "match_bets8" do
-    assert :ok = Betunfair.clean("testdb")
-    assert :ok = Betunfair.start_link("testdb")
+    assert {:ok,_} = Betunfair.clean("testdb")
+    assert  {:ok,_} = Betunfair.start_link("testdb")
     assert {:ok,u1} = Betunfair.user_create("u1","Francisco Gonzalez")
     assert {:ok,u2} = Betunfair.user_create("u2","Maria Fernandez")
     assert is_ok(Betunfair.user_deposit(u1,2000))
@@ -241,8 +241,8 @@ defmodule Betunfair.BetTest do
   end
 
   test "match_bets9" do
-    assert :ok = Betunfair.clean("testdb")
-    assert :ok = Betunfair.start_link("testdb")
+    assert {:ok,_} = Betunfair.clean("testdb")
+    assert  {:ok,_} = Betunfair.start_link("testdb")
     assert {:ok,u1} = Betunfair.user_create("u1","Francisco Gonzalez")
     assert {:ok,u2} = Betunfair.user_create("u2","Maria Fernandez")
     assert is_ok(Betunfair.user_deposit(u1,2000))
@@ -263,8 +263,8 @@ defmodule Betunfair.BetTest do
   end
 
   test "match_bets10" do
-    assert :ok = Betunfair.clean("testdb")
-    assert :ok = Betunfair.start_link("testdb")
+    assert {:ok,_} = Betunfair.clean("testdb")
+    assert  {:ok,_} = Betunfair.start_link("testdb")
     assert {:ok,u1} = Betunfair.user_create("u1","Francisco Gonzalez")
     assert {:ok,u2} = Betunfair.user_create("u2","Maria Fernandez")
     assert is_ok(Betunfair.user_deposit(u1,2000))
@@ -285,8 +285,8 @@ defmodule Betunfair.BetTest do
   end
 
   test "match_bets11" do
-    assert :ok = Betunfair.clean("testdb")
-    assert :ok = Betunfair.start_link("testdb")
+    assert {:ok,_} = Betunfair.clean("testdb")
+    assert  {:ok,_} = Betunfair.start_link("testdb")
     assert {:ok,u1} = Betunfair.user_create("u1","Francisco Gonzalez")
     assert {:ok,u2} = Betunfair.user_create("u2","Maria Fernandez")
     assert is_ok(Betunfair.user_deposit(u1,2000))
@@ -307,8 +307,8 @@ defmodule Betunfair.BetTest do
   end
 
   test "bet_cancel1" do
-    assert :ok = Betunfair.clean("testdb")
-    assert :ok = Betunfair.start_link("testdb")
+    assert {:ok,_} = Betunfair.clean("testdb")
+    assert  {:ok,_} = Betunfair.start_link("testdb")
     assert {:ok,u1} = Betunfair.user_create("u1","Francisco Gonzalez")
     assert {:ok,u2} = Betunfair.user_create("u2","Maria Fernandez")
     assert is_ok(Betunfair.user_deposit(u1,2000))
