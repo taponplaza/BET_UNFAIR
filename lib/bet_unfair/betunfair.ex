@@ -24,8 +24,6 @@ defmodule Betunfair do
 
   def market_create(name, description), do: GenServer.call(__MODULE__, {:market_create, name, description})
 
-  def place_bet(user_id, market_id, stake, odds, bet_type), do: GenServer.call(__MODULE__, {:place_bet, user_id, market_id, stake, odds, bet_type})
-
   def cancel_bet(bet_id), do: GenServer.call(__MODULE__, {:cancel_bet, bet_id})
 
   def user_deposit(user_id, amount), do: GenServer.call(__MODULE__, {:user_deposit, user_id, amount})
@@ -95,18 +93,6 @@ defmodule Betunfair do
     {:stop, :normal, state}
   end
 
-  def handle_cast({:place_bet, bet_type, user_id, market_id, stake, odds}, state) do
-    bet_placer = if bet_type == "back", do: &Bet.bet_back/4, else: &Bet.bet_lay/4
-    case bet_placer.(user_id, market_id, stake, odds) do
-      {:ok, bet_id} ->
-        IO.puts "Bet #{bet_id} placed successfully"
-        {:noreply, state}
-      {:error, _reason} ->
-        IO.puts "Failed to place bet"
-        {:noreply, state}
-    end
-  end
-
 
   def handle_call({:user_create, user_id, name}, _from, state) do
     {:reply, User.user_create(user_id, name), state}
@@ -120,85 +106,85 @@ defmodule Betunfair do
     {:reply, Bet.bet_cancel(bet_id), state}
   end
 
-    def handle_call({:user_deposit, user_id, amount}, _from, state) do
-      {:reply, User.user_deposit(user_id, amount), state}
-    end
-
-    def handle_call({:user_withdraw, user_id, amount}, _from, state) do
-      {:reply, User.user_withdraw(user_id, amount), state}
-    end
-
-    def handle_call({:user_get, user_id}, _from, state) do
-      {:reply, User.user_get(user_id), state}
-    end
-
-    def handle_call({:user_bets, user_id}, _from, state) do
-      {:reply, User.user_bets(user_id), state}
-    end
-
-    def handle_call(:market_list, _from, state) do
-      {:reply, Market.market_list(), state}
-    end
-
-    def handle_call(:market_list_active, _from, state) do
-      {:reply, Market.market_list_active(), state}
-    end
-
-    def handle_call({:market_cancel, market_id}, _from, state) do
-      {:reply, Market.market_cancel(market_id), state}
-    end
-
-    def handle_call({:market_freeze, market_id}, _from, state) do
-      {:reply, Market.market_freeze(market_id), state}
-    end
-
-    def handle_call({:market_settle, market_id, result}, _from, state) do
-      {:reply, Market.market_settle(market_id, result), state}
-    end
-
-    def handle_call({:market_bets, market_id}, _from, state) do
-      {:reply, Market.market_bets(market_id), state}
-    end
-
-    def handle_call({:market_pending_backs, market_id}, _from, state) do
-      {:reply, Market.market_pending_backs(market_id), state}
-    end
-
-    def handle_call({:market_pending_lays, market_id}, _from, state) do
-      {:reply, Market.market_pending_lays(market_id), state}
-    end
-
-    def handle_call({:market_get, market_id}, _from, state) do
-      {:reply, Market.market_get(market_id), state}
-    end
-
-    def handle_call({:market_match, market_id}, _from, state) do
-      {:reply, Market.market_match(market_id), state}
-    end
-
-    def handle_call({:bet_back, user_id, market_id, stake, odds}, _from, state) do
-      {:reply, Bet.bet_back(user_id, market_id, stake, odds), state}
-    end
-
-    def handle_call({:bet_lay, user_id, market_id, stake, odds}, _from, state) do
-      {:reply, Bet.bet_lay(user_id, market_id, stake, odds), state}
-    end
-
-    def handle_call({:bet_cancel, bet_id}, _from, state) do
-      {:reply, Bet.bet_cancel(bet_id), state}
-    end
-
-    def handle_call({:bet_get, bet_id}, _from, state) do
-      {:reply, Bet.bet_get(bet_id), state}
-    end
-
-
-
-    def handle_info(_msg, state) do
-      {:noreply, state}
-    end
-
-    def terminate(_reason, _state) do
-      :ok
-    end
+  def handle_call({:user_deposit, user_id, amount}, _from, state) do
+    {:reply, User.user_deposit(user_id, amount), state}
   end
+
+  def handle_call({:user_withdraw, user_id, amount}, _from, state) do
+    {:reply, User.user_withdraw(user_id, amount), state}
+  end
+
+  def handle_call({:user_get, user_id}, _from, state) do
+    {:reply, User.user_get(user_id), state}
+  end
+
+  def handle_call({:user_bets, user_id}, _from, state) do
+    {:reply, User.user_bets(user_id), state}
+  end
+
+  def handle_call(:market_list, _from, state) do
+    {:reply, Market.market_list(), state}
+  end
+
+  def handle_call(:market_list_active, _from, state) do
+    {:reply, Market.market_list_active(), state}
+  end
+
+  def handle_call({:market_cancel, market_id}, _from, state) do
+    {:reply, Market.market_cancel(market_id), state}
+  end
+
+  def handle_call({:market_freeze, market_id}, _from, state) do
+    {:reply, Market.market_freeze(market_id), state}
+  end
+
+  def handle_call({:market_settle, market_id, result}, _from, state) do
+    {:reply, Market.market_settle(market_id, result), state}
+  end
+
+  def handle_call({:market_bets, market_id}, _from, state) do
+    {:reply, Market.market_bets(market_id), state}
+  end
+
+  def handle_call({:market_pending_backs, market_id}, _from, state) do
+    {:reply, Market.market_pending_backs(market_id), state}
+  end
+
+  def handle_call({:market_pending_lays, market_id}, _from, state) do
+    {:reply, Market.market_pending_lays(market_id), state}
+  end
+
+  def handle_call({:market_get, market_id}, _from, state) do
+    {:reply, Market.market_get(market_id), state}
+  end
+
+  def handle_call({:market_match, market_id}, _from, state) do
+    {:reply, Market.market_match(market_id), state}
+  end
+
+  def handle_call({:bet_back, user_id, market_id, stake, odds}, _from, state) do
+    {:reply, Bet.bet_back(user_id, market_id, stake, odds), state}
+  end
+
+  def handle_call({:bet_lay, user_id, market_id, stake, odds}, _from, state) do
+    {:reply, Bet.bet_lay(user_id, market_id, stake, odds), state}
+  end
+
+  def handle_call({:bet_cancel, bet_id}, _from, state) do
+    {:reply, Bet.bet_cancel(bet_id), state}
+  end
+
+  def handle_call({:bet_get, bet_id}, _from, state) do
+    {:reply, Bet.bet_get(bet_id), state}
+  end
+
+
+
+  def handle_info(_msg, state) do
+    {:noreply, state}
+  end
+
+  def terminate(_reason, _state) do
+    :ok
+  end
+end

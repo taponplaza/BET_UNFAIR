@@ -35,7 +35,7 @@ defmodule Betunfair.Bet do
           {:ok, _} ->
             bet_changeset =
               %__MODULE__{}
-              |> changeset(%{user_id: user_id, market_id: market_id, amount: stake, odds: odds, bet_type: "back", original_stake: stake, remaining_stake: stake, matched_bets: [], status: "active"})
+              |> changeset(%{user_id: user_id, market_id: market_id, amount: stake, odds: odds, bet_type: "back", original_stake: stake, remaining_stake: stake, status: "active"})
             case Repo.insert(bet_changeset) do
               {:ok, bet} -> {:ok, bet.id}
               _ -> {:error, "Failed to place back bet."}
@@ -53,7 +53,7 @@ defmodule Betunfair.Bet do
           {:ok, _} ->
             bet_changeset =
               %__MODULE__{}
-              |> changeset(%{user_id: user_id, market_id: market_id, amount: stake, odds: odds, bet_type: "lay", original_stake: stake, remaining_stake: stake, matched_bets: [], status: "active"})
+              |> changeset(%{user_id: user_id, market_id: market_id, amount: stake, odds: odds, bet_type: "lay", original_stake: stake, remaining_stake: stake, status: "active"})
             case Repo.insert(bet_changeset) do
               {:ok, bet} -> {:ok, bet.id}
               _ -> {:error, "Failed to place lay bet."}
