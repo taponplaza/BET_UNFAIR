@@ -4,7 +4,7 @@ defmodule Betunfair.Bet do
   import Ecto.Query
   alias Betunfair.{Repo, Market, User, Bet, Match}
 
-  @bet_statuses ["active", "cancelled", "market_cancelled", "market_settled", "matched"]
+  @bet_statuses ["active", "cancelled", "market_cancelled", "market_settled"]
   @bet_types ["back", "lay"]
 
   schema "bets" do
