@@ -227,15 +227,11 @@ defmodule Betunfair.Market do
         end
 
 
-      # Compute new stakes and statuses
-      new_back_status = if(new_back_stake == 0, do: "matched", else: "active")
-      new_lay_status = if(new_lay_stake == 0, do: "matched", else: "active")
-
       # Begin a new multi operation
       multi =
         Ecto.Multi.new()
-        |> Ecto.Multi.update(:update_back_bet, Bet.changeset(back_bet, %{remaining_stake: new_back_stake, status: new_back_status}))
-        |> Ecto.Multi.update(:update_lay_bet, Bet.changeset(lay_bet, %{remaining_stake: new_lay_stake, status: new_lay_status}))
+        |> Ecto.Multi.update(:update_back_bet, Bet.changeset(back_bet, %{remaining_stake: new_back_stake}))
+        |> Ecto.Multi.update(:update_lay_bet, Bet.changeset(lay_bet, %{remaining_stake: new_lay_stake}))
         |> Ecto.Multi.insert(:create_match, Match.changeset(%Match{}, %{back_bet_id: back_bet.id, lay_bet_id: lay_bet.id, matched_amount: match_amount}))
 
         case Repo.transaction(multi) do
